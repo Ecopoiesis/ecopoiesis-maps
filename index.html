@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Ecopoiesis Maps — the living map of Earth's restoration</title>
+  <meta name="description" content="A community-built map of the world's restoration work. Gardening the Earth, together." />
+
+  <!-- MapLibre GL JS (open source, no API key needed for this demo style) -->
+  <link href="https://unpkg.com/maplibre-gl@latest/dist/maplibre-gl.css" rel="stylesheet" />
+  <script src="https://unpkg.com/maplibre-gl@latest/dist/maplibre-gl.js"></script>
+
+  <!-- Type: Fraunces (characterful botanical-plate display) + Inter (clean, data-forward body) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+
+  <style>
+    :root {
+      --ink:   #1C3327;   /* deep forest — text + trunk */
+      --leaf:  #3F7350;   /* brand green */
+      --moss:  #7E9B7A;   /* muted sage */
+      --paper: #EDE8D6;   /* herbarium paper */
+      --ochre: #B0812F;   /* botanical accent, used sparingly */
+      --line:  rgba(28, 51, 39, 0.14);
+    }
+
+    * { box-sizing: border-box; }
+    html, body { height: 100%; margin: 0; }
+    body { font-family: "Inter", system-ui, sans-serif; color: var(--ink); }
+
+    /* The map is the page. Everything else floats over it. */
+    #map { position: fixed; inset: 0; background: var(--paper); }
+
+    /* ---- Hero card (top-left) ---- */
+    .hero {
+      position: fixed; top: 28px; left: 28px; z-index: 10;
+      max-width: 380px;
+      padding: 22px 24px;
+      background: rgba(237, 232, 214, 0.92);
+      backdrop-filter: blur(6px);
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      box-shadow: 0 8px 30px rgba(28, 51, 39, 0.12);
+    }
+    .eyebrow {
+      font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase;
+      color: var(--leaf); margin: 0 0 10px;
+    }
+    .wordmark {
+      font-family: "Fraunces", serif; font-weight: 600;
+      font-size: 30px; line-height: 1.05; margin: 0 0 8px;
+    }
+    .tagline {
+      font-family: "Fraunces", serif; font-style: italic; font-weight: 400;
+      font-size: 17px; color: var(--leaf); margin: 0 0 12px;
+    }
+    .sub { font-size: 13.5px; line-height: 1.5; color: rgba(28,51,39,0.78); margin: 0; }
+
+    /* ---- The signature element: the tree-of-life rail ---- */
+    /* The trunk runs up the left edge; branches (taxonomy) peek in, inviting a click. */
+    .rail {
+      position: fixed; top: 0; left: 0; bottom: 0; z-index: 9;
+      width: 148px; pointer-events: none;
+    }
+    .rail svg { width: 100%; height: 100%; display: block; }
+    .branch-label {
+      font-family: "Inter", sans-serif; font-size: 12px; font-weight: 500;
+      fill: var(--ink); opacity: 0.9;
+    }
+    .rail-hint {
+      position: fixed; left: 20px; bottom: 24px; z-index: 10;
+      font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase;
+      color: var(--ink); opacity: 0.55; writing-mode: vertical-rl; transform: rotate(180deg);
+    }
+
+    /* ---- Seed markers ---- */
+    .pin {
+      width: 14px; height: 14px; border-radius: 50%;
+      background: var(--leaf); border: 2px solid var(--paper);
+      box-shadow: 0 0 0 1px var(--line), 0 2px 6px rgba(28,51,39,0.3);
+      cursor: pointer;
+    }
+    .maplibregl-popup { max-width: 240px !important; }
+    .maplibregl-popup-content {
+      font-family: "Inter", sans-serif; border-radius: 4px;
+      padding: 12px 14px; border: 1px solid var(--line);
+    }
+    .popup-type {
+      font-size: 10.5px; letter-spacing: 0.12em; text-transform: uppercase;
+      color: var(--ochre); margin: 0 0 4px;
+    }
+    .popup-name { font-family: "Fraunces", serif; font-weight: 600; font-size: 15px; margin: 0; }
+
+    /* ---- Mobile: the rail steps aside so the map keeps the stage ---- */
+    @media (max-width: 640px) {
+      .rail, .rail-hint { display: none; }
+      .hero { top: 16px; left: 16px; right: 16px; max-width: none; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      * { animation: none !important; transition: none !important; }
+    }
+  </style>
+</head>
+<body>
+  <div id="map" aria-label="Map of restoration projects"></div>
+
+  <!-- Tree-of-life rail: the trunk + a few branches peeking in from the edge -->
+  <div class="rail" aria-hidden="true">
+    <svg viewBox="0 0 148 900" preserveAspectRatio="xMinYMid slice">
+      <!-- trunk -->
+      <path d="M20 900 L20 120 Q20 70 44 60" fill="none" stroke="var(--ink)" stroke-width="3" opacity="0.5"/>
+      <!-- branches, each a taxonomy entry budding toward the map -->
+      <g stroke="var(--leaf)" stroke-width="2" fill="none" opacity="0.55">
+        <path d="M20 760 Q60 750 96 742"/>
+        <path d="M20 610 Q64 600 104 592"/>
+        <path d="M20 470 Q58 462 92 456"/>
+        <path d="M20 330 Q66 322 108 316"/>
+        <path d="M20 200 Q56 192 88 188"/>
+      </g>
+      <g>
+        <circle cx="96"  cy="742" r="3.5" fill="var(--leaf)"/>
+        <circle cx="104" cy="592" r="3.5" fill="var(--leaf)"/>
+        <circle cx="92"  cy="456" r="3.5" fill="var(--leaf)"/>
+        <circle cx="108" cy="316" r="3.5" fill="var(--leaf)"/>
+        <circle cx="88"  cy="188" r="3.5" fill="var(--leaf)"/>
+      </g>
+      <g class="branch-label">
+        <text x="104" y="746">Forest</text>
+        <text x="112" y="596">Freshwater</text>
+        <text x="100" y="460">Coastal</text>
+        <text x="116" y="320">Urban</text>
+        <text x="96"  y="192">Soil</text>
+      </g>
+    </svg>
+  </div>
+  <div class="rail-hint">Tree of life · explore by kind</div>
+
+  <div class="hero">
+    <p class="eyebrow">Ecopoiesis</p>
+    <h1 class="wordmark">Ecopoiesis Maps</h1>
+    <p class="tagline">Gardening the Earth, together.</p>
+    <p class="sub">A living map of the world's restoration work — made legible, connected, and open to everyone doing the work.</p>
+  </div>
+
+  <script>
+    // A handful of seed projects so the map feels alive on day one.
+    // (Later these come from your database instead of being hard-coded.)
+    const seeds = [
+      { name: "Loess Plateau Restoration", type: "Watershed / Soil", lng: 109.5, lat: 36.8 },
+      { name: "Great Green Wall — Sahel",  type: "Dryland / Reforestation", lng: 8.0, lat: 14.5 },
+      { name: "Atlantic Forest Corridor",  type: "Rewilding", lng: -42.0, lat: -20.5 },
+      { name: "Mangrove Revival — Sundarbans", type: "Coastal / Mangrove", lng: 89.2, lat: 21.9 },
+      { name: "Peatland Rewetting — Scotland", type: "Wetland / Peatland", lng: -4.2, lat: 57.5 },
+      { name: "Kelp Forest Recovery — Tasmania", type: "Marine / Kelp", lng: 147.3, lat: -42.9 }
+    ];
+
+    const map = new maplibregl.Map({
+      container: "map",
+      // Free demo style — no API key, no account. Swap for a richer keyed style later.
+      style: "https://demotiles.maplibre.org/style.json",
+      center: [20, 20],
+      zoom: 1.6,
+      attributionControl: { compact: true }
+    });
+
+    map.addControl(new maplibregl.NavigationControl({ showCompass: false }), "bottom-right");
+
+    map.on("load", () => {
+      for (const p of seeds) {
+        const el = document.createElement("div");
+        el.className = "pin";
+        const popup = new maplibregl.Popup({ offset: 16, closeButton: false }).setHTML(
+          `<p class="popup-type">${p.type}</p><p class="popup-name">${p.name}</p>`
+        );
+        new maplibregl.Marker({ element: el }).setLngLat([p.lng, p.lat]).setPopup(popup).addTo(map);
+      }
+    });
+  </script>
+</body>
+</html>
