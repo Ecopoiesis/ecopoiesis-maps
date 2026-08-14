@@ -6,9 +6,11 @@
   <title>Ecopoiesis Maps — the living map of Earth's restoration</title>
   <meta name="description" content="A community-built map of the world's restoration work. Gardening the Earth, together." />
 
-  <!-- MapLibre GL JS (open source, no API key needed for this demo style) -->
-  <link href="https://unpkg.com/maplibre-gl@latest/dist/maplibre-gl.css" rel="stylesheet" />
-  <script src="https://unpkg.com/maplibre-gl@latest/dist/maplibre-gl.js"></script>
+  <!-- Tiny inline favicon (a green seed) so the browser stops 404-ing on /favicon.ico -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><circle cx='16' cy='16' r='11' fill='%233F7350'/></svg>" />
+
+  <!-- MapLibre GL JS v6 — CSS still loads via a normal <link> -->
+  <link href="https://unpkg.com/maplibre-gl@6/dist/maplibre-gl.css" rel="stylesheet" />
 
   <!-- Type: Fraunces (characterful botanical-plate display) + Inter (clean, data-forward body) -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -144,7 +146,10 @@
     <p class="sub">A living map of the world's restoration work — made legible, connected, and open to everyone doing the work.</p>
   </div>
 
-  <script>
+  <!-- MapLibre v6 is ESM-only, so we load it as a module and import it by name. -->
+  <script type="module">
+    import * as maplibregl from "https://unpkg.com/maplibre-gl@6/dist/maplibre-gl.mjs";
+
     // A handful of seed projects so the map feels alive on day one.
     // (Later these come from your database instead of being hard-coded.)
     const seeds = [
@@ -161,8 +166,7 @@
       // Free demo style — no API key, no account. Swap for a richer keyed style later.
       style: "https://demotiles.maplibre.org/style.json",
       center: [20, 20],
-      zoom: 1.6,
-      attributionControl: { compact: true }
+      zoom: 1.6
     });
 
     map.addControl(new maplibregl.NavigationControl({ showCompass: false }), "bottom-right");
