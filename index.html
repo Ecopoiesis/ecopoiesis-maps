@@ -161,10 +161,12 @@
       { name: "Kelp Forest Recovery — Tasmania", type: "Marine / Kelp", lng: 147.3, lat: -42.9 }
     ];
 
+   // Your MapTiler key — public by design, secured by the domain allowlist you set.
+    const MAPTILER_KEY = "wee9e0OIMJZLkYOPHNJz";
+
     const map = new maplibregl.Map({
       container: "map",
-      // Free demo style — no API key, no account. Swap for a richer keyed style later.
-      style: "https://demotiles.maplibre.org/style.json",
+      style: `https://api.maptiler.com/maps/dataviz/style.json?key=${MAPTILER_KEY}`,
       center: [20, 20],
       zoom: 1.6
     });
